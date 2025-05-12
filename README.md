@@ -1,7 +1,7 @@
 # InsectCT Project
 
 ## Overview
-The InsectCT project is designed for the ESP32-S3 platform, utilizing the T-Camera module to capture and process images for insect classification and analysis. This project aims to provide a robust framework for developing applications that leverage the capabilities of the ESP32-S3, including camera functionality and machine learning.
+The InsectCT project is an example of how models from the [Ecto-Trigger code-base]() can be applied to microcontrollers in firmware, in this case we target the ESP32-S3 platform to capture and process images for insect classification and analysis. The firmware written in this example covers several key aspects: (1) compiler configuration and a tech-stack for writing firmware using the Arduino platform and Platformio, (2) code which performs key functions towards creating a camera trap system including image capture, neural network processing and saving images to SD cards, (3) libraries and dependencies compatible with our platform choice. 
 
 ## Project Structure
 - **src/**: The main source directory containing setup and loop functions in **main.cpp** for the application and external configuration headers and model weights.
@@ -29,7 +29,7 @@ The InsectCT project is designed for the ESP32-S3 platform, utilizing the T-Came
    ```
 
 ## Usage
-After uploading the firmware, the ESP32-S3 will start executing the code in `src/main.cpp`. You can modify this file to implement specific logic for your insect classification tasks.
+After uploading the firmware, the ESP32-S3 will start executing the code in `src/main.cpp`. You can modify this file to implement specific logic for your insect classification tasks, although at present it will run a given model and if a prediction is over a given threshold, it will save the image. 
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a pull request or open an issue for any enhancements or bug fixes.
