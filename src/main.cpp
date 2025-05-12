@@ -60,9 +60,6 @@ extern long long add_total_time;
 extern long long mul_total_time;
 #endif
 
-void captureTask(void *pvParameters);
-void runInference();
-bool preprocessFrame(camera_fb_t* fb, TfLiteTensor* input);
 
 // ----- SD Task -----
 void storageTask(void* pvParameters) {
@@ -165,6 +162,7 @@ void setup() {
   
 
   int current_file_index = 0;
+  int threshold = 0;
 
   void loop() {
     Serial.printf("Internal RAM: %d bytes\n", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
@@ -217,7 +215,7 @@ void setup() {
       Serial.printf("Inference done in %lu ms, score: %d\n", millis() - t1, score);
   
       // 4. If interesting, copy to DRAM for SD task
-      if (SAVE && !image_ready_for_save) {
+      if (score >= threshold  && !image_ready_for_save) {
         memcpy(saved_frame_buf, fb->buf, fb->len);
         saved_frame_len = fb->len;
         current_file_index = (current_file_index + 1) % 10;
@@ -228,9 +226,7 @@ void setup() {
   
     esp_camera_fb_return(fb);
     Serial.printf("⏱ Total loop time: %lu ms\n\n", millis() - t0);
-    //Serial.printf("Running on core %d\n", xPortGetCoreID());
 
-    //delay(50);
   }
   
 
@@ -263,107 +259,3 @@ void captureTask(void *pvParameters) {
   }
 }
 
-
-bool preprocessFrame(camera_fb_t* fb, TfLiteTensor* input) {
-  if (!fb || fb->format != PIXFORMAT_RGB565) {
-    Serial.println("Frame invalid or not in RGB565 format");
-    return false;
-  }
-
-  int src_w = fb->width;
-  int src_h = fb->height;
-  const uint16_t* src = (uint16_t*)fb->buf;
-
-  float x_ratio = (float)src_w / INPUT_WIDTH;
-  float y_ratio = (float)src_h / INPUT_HEIGHT;
-
-  int input_idx = 0;
-
-  for (int y = 0; y < INPUT_HEIGHT; y++) {
-    for (int x = 0; x < INPUT_WIDTH; x++) {
-      int src_x = int(x * x_ratio);
-      int src_y = int(y * y_ratio);
-      uint16_t rgb565 = src[src_y * src_w + src_x];
-
-      uint8_t r = ((rgb565 >> 11) & 0x1F) << 3;
-      uint8_t g = ((rgb565 >> 5) & 0x3F) << 2;
-      uint8_t b = (rgb565 & 0x1F) << 3;
-
-      if (INPUT_CHANNELS == 1) {
-        uint8_t gray = (r + g + b) / 3;
-        input->data.int8[input_idx++] = gray - 128;  // if quantized
-      } else {
-        input->data.int8[input_idx++] = r - 128;
-        input->data.int8[input_idx++] = g - 128;
-        input->data.int8[input_idx++] = b - 128;
-      }
-    }
-  }
-
-  return true;
-}
-
-// bool decodeAndPreprocessJpg(const char* path, TfLiteTensor* input) {
-//     JpegDec.decodeSdFile(path);
-//     if (!JpegDec.read()) {
-//       Serial.println("JPEG decode failed");
-//       return false;
-//     }
-  
-//     int src_w = JpegDec.width;
-//     int src_h = JpegDec.height;
-  
-//     float x_ratio = (float)src_w / INPUT_WIDTH;
-//     float y_ratio = (float)src_h / INPUT_HEIGHT;
-  
-//     int input_idx = 0;
-  
-//     for (int y = 0; y < INPUT_HEIGHT; y++) {
-//       for (int x = 0; x < INPUT_WIDTH; x++) {
-//         int src_x = int(x * x_ratio);
-//         int src_y = int(y * y_ratio);
-//         uint16_t color = JpegDec.getPixel(src_x, src_y);  // RGB565
-  
-//         uint8_t r = ((color >> 11) & 0x1F) << 3;
-//         uint8_t g = ((color >> 5) & 0x3F) << 2;
-//         uint8_t b = (color & 0x1F) << 3;
-  
-//         if (INPUT_CHANNELS == 1) {
-//           uint8_t gray = (r + g + b) / 3;
-//           input->data.int8[input_idx++] = gray - 128;
-//         } else {
-//           input->data.int8[input_idx++] = r - 128;
-//           input->data.int8[input_idx++] = g - 128;
-//           input->data.int8[input_idx++] = b - 128;
-//         }
-//       }
-//     }
-  
-//     return true;
-//   }
-
-void runInference() {
-  if (interpreter->Invoke() != kTfLiteOk) {
-    Serial.println("Inference failed!");
-    return;
-  }
-
-  TfLiteTensor* output = interpreter->output(0);
-  Serial.print("Inference output: ");
-  for (int i = 0; i < output->bytes && i < 5; i++) {
-    Serial.printf("%d ", output->data.int8[i]);
-  }
-  Serial.println();
-
-  #if defined(COLLECT_CPU_STATS)
-  Serial.printf("Operator timings (µs):\n");
-  Serial.printf("  Conv2D       : %lld\n", conv_total_time);
-  Serial.printf("  FullyConnected: %lld\n", fc_total_time);
-  Serial.printf("  DepthwiseConv: %lld\n", dc_total_time);
-  Serial.printf("  Pooling      : %lld\n", pooling_total_time);
-  Serial.printf("  Add          : %lld\n", add_total_time);
-  Serial.printf("  Mul          : %lld\n", mul_total_time);
-  Serial.printf("  Softmax      : %lld\n", softmax_total_time);
-#endif
-
-}
