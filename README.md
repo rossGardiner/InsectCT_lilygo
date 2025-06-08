@@ -10,7 +10,7 @@ The InsectCT project is an example of how models from the [Ecto-Trigger code-bas
 ## Setup Instructions
 1. **Clone the Repository**: 
    ```
-   git clone <repository-url>
+   git clone https://github.com/rossGardiner/InsectCT_lilygo.git
    cd InsectCT_lilygo
    ```
 
