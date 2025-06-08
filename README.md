@@ -1,7 +1,7 @@
 # InsectCT Project
 
 ## Overview
-The InsectCT project is an example of how models from the [Ecto-Trigger code-base]() can be applied to microcontrollers in firmware, in this case we target the ESP32-S3 platform to capture and process images for insect classification and analysis. The firmware written in this example covers several key aspects: (1) compiler configuration and a tech-stack for writing firmware using the Arduino platform and Platformio, (2) code which performs key functions towards creating a camera trap system including image capture, neural network processing and saving images to SD cards, (3) libraries and dependencies compatible with our platform choice of the Lilygo T-SIMCAM develpoment board. 
+The InsectCT project is an example of how models from the [Ecto-Trigger code-base](https://github.com/rossGardiner/ecto-trigger/) can be applied to microcontrollers in firmware, in this case we target the ESP32-S3 platform to capture and process images for insect classification and analysis. The firmware written in this example covers several key aspects: (1) compiler configuration and a tech-stack for writing firmware using the Arduino platform and Platformio, (2) code which performs key functions towards creating a camera trap system including image capture, neural network processing and saving images to SD cards, (3) libraries and dependencies compatible with our platform choice of the Lilygo T-SIMCAM develpoment board. 
 
 ## Project Structure
 - **src/**: The main source directory containing setup and loop functions in **main.cpp** for the application and external configuration headers and model weights.
